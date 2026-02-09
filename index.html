@@ -69,6 +69,26 @@
             opacity: 0;
             transition: opacity 1s ease;
         }
+        .feedback-link {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: rgba(255, 248, 220, 0.6);
+            font-size: 12px;
+            z-index: 100;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            opacity: 0;
+        }
+        .feedback-link.visible {
+            opacity: 1;
+        }
+        .feedback-link:hover {
+            color: rgba(255, 248, 220, 0.9);
+            text-shadow: 0 0 8px rgba(255, 248, 220, 0.5);
+        }
     </style>
 </head>
 <body>
@@ -79,6 +99,7 @@
         <div class="section-title" id="title2" style="top: 35%;">纸雕</div>
         <div class="section-title" id="title3" style="top: 55%;">艺术</div>
         <div class="section-title" id="title4" style="top: 75%;">2026</div>
+        <a href="https://wj.qq.com/s2/25722416/b2e6/" target="_blank" class="feedback-link" id="feedback">问题反馈</a>
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -446,9 +467,10 @@
         let isScrolling = false;
         let time = 0;
         
-        // 处理滚动 - 更新标题显示
+        // 处理滚动 - 更新标题显示和反馈链接
         const handleScroll = () => {
             const scrollPercent = window.scrollY / (document.body.scrollHeight - window.innerHeight);
+            const feedbackLink = document.getElementById('feedback');
             
             // 显示对应的标题
             const titles = ['title1', 'title2', 'title3', 'title4'];
@@ -463,6 +485,13 @@
             // 隐藏滚动指示器
             if (scrollPercent > 0.1) {
                 document.getElementById('indicator').style.display = 'none';
+            }
+            
+            // 滚动到底部90%时显示反馈链接
+            if (scrollPercent > 0.9) {
+                feedbackLink.classList.add('visible');
+            } else {
+                feedbackLink.classList.remove('visible');
             }
         };
         
