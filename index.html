@@ -33,14 +33,7 @@
             touch-action: pan-y;
         }
         .loading {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            color: #fff;
-            font-size: 24px;
-            z-index: 1000;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            display: none;
         }
         .scroll-indicator {
             position: fixed;
@@ -125,12 +118,6 @@
         renderer.domElement.style.pointerEvents = 'none';
         renderer.domElement.style.zIndex = '1';
         document.getElementById('canvas-container').appendChild(renderer.domElement);
-        
-        // 隐藏加载提示
-        setTimeout(() => {
-            document.getElementById('loading').style.display = 'none';
-            document.getElementById('indicator').style.display = 'block';
-        }, 1500);
         
         // 灯光设置
         const ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
@@ -332,7 +319,7 @@
         
         // 创建地面
         const createGround = () => {
-            const groundGeometry = new THREE.PlaneGeometry(50, 200);
+            const groundGeometry = new THREE.PlaneGeometry(50, 300);  // 扩大地面
             const groundMaterial = new THREE.MeshLambertMaterial({ 
                 color: 0xfff8dc,
                 transparent: true,
@@ -340,7 +327,7 @@
             });
             const ground = new THREE.Mesh(groundGeometry, groundMaterial);
             ground.rotation.x = -Math.PI / 2;
-            ground.position.y = -15;
+            ground.position.y = -25;  // 向下移动地面
             ground.receiveShadow = true;
             return ground;
         };
@@ -383,83 +370,126 @@
             return branchGroup;
         };
         
-        // 创建长图场景（按垂直位置排列）
+        // 创建长图场景（按垂直位置排列）- 整体下移确保新春显示完整
         const sceneElements = [];
         
-        // 第一部分：顶部（0-10）
-        const topArch = createVerticalArch(18);
+        // 第一部分：顶部 - 下移让新春完整显示在顶部
+        const topArch = createVerticalArch(8);  // 从18改为8
         scene.add(topArch);
         sceneElements.push(topArch);
         
-        const topText = createVerticalText('新春', 22);
+        const topText = createVerticalText('新春', 12);  // 从22改为12
         scene.add(topText);
         sceneElements.push(topText);
         
-        // 第二部分：上部（8-5）
-        const decor1 = createDecoration(12, 'cloud');
+        // 第二部分：上部
+        const decor1 = createDecoration(2, 'cloud');  // 从12改为2
         scene.add(decor1);
         sceneElements.push(decor1);
         
         const pavilion1 = createPavilion(1.3);
-        pavilion1.position.set(-3, 10, -4);
+        pavilion1.position.set(-3, 0, -4);  // 从10改为0
+        pavilion1.userData = { baseScale: 1.3 };
         scene.add(pavilion1);
         sceneElements.push(pavilion1);
         
         const pavilion2 = createPavilion(0.9);
-        pavilion2.position.set(3, 8, -5);
+        pavilion2.position.set(3, -2, -5);  // 从8改为-2
+        pavilion2.userData = { baseScale: 0.9 };
         scene.add(pavilion2);
         sceneElements.push(pavilion2);
         
-        // 第三部分：中部（5-0）
-        const midArch = createVerticalArch(3);
+        // 第三部分：中部
+        const midArch = createVerticalArch(-7);  // 从3改为-7
         scene.add(midArch);
         sceneElements.push(midArch);
         
-        const midText = createVerticalText('吉祥', 6);
+        const midText = createVerticalText('吉祥', -4);  // 从6改为-4
         scene.add(midText);
         sceneElements.push(midText);
         
-        const decor2 = createDecoration(0, 'flower');
+        const decor2 = createDecoration(-10, 'flower');  // 从0改为-10
         scene.add(decor2);
         sceneElements.push(decor2);
         
-        // 第四部分：下部（0到-8）
+        // 第四部分：下部
         const pavilion3 = createPavilion(1.1);
-        pavilion3.position.set(-2, -2, -3);
+        pavilion3.position.set(-2, -12, -3);  // 从-2改为-12
+        pavilion3.userData = { baseScale: 1.1 };
         scene.add(pavilion3);
         sceneElements.push(pavilion3);
         
-        const decor3 = createDecoration(-4, 'cloud');
+        const decor3 = createDecoration(-14, 'cloud');  // 从-4改为-14
         scene.add(decor3);
         sceneElements.push(decor3);
         
-        const bottomArch = createVerticalArch(-8);
+        const bottomArch = createVerticalArch(-18);  // 从-8改为-18
         scene.add(bottomArch);
         sceneElements.push(bottomArch);
         
-        // 第五部分：底部（-8到-15）
-        const bottomText = createVerticalText('如意', -12);
+        // 第五部分：底部
+        const bottomText = createVerticalText('如意', -22);  // 从-12改为-22
         scene.add(bottomText);
         sceneElements.push(bottomText);
         
-        // 前景梅花枝装饰（多层）
-        const plum1 = createPlumDecoration('left', 15);
+        // 底部扩展部分
+        const bottomDecor = createDecoration(-25, 'flower');  // 从-15改为-25
+        scene.add(bottomDecor);
+        sceneElements.push(bottomDecor);
+        
+        const bottomArch2 = createVerticalArch(-28);  // 从-18改为-28
+        scene.add(bottomArch2);
+        sceneElements.push(bottomArch2);
+        
+        const bottomText2 = createVerticalText('安康', -32);  // 从-22改为-32
+        scene.add(bottomText2);
+        sceneElements.push(bottomText2);
+        
+        const pavilion4 = createPavilion(0.8);
+        pavilion4.position.set(2.5, -26, -4);  // 从-16改为-26
+        pavilion4.userData = { baseScale: 0.8 };
+        scene.add(pavilion4);
+        sceneElements.push(pavilion4);
+        
+        const bottomDecor2 = createDecoration(-35, 'cloud');  // 从-25改为-35
+        scene.add(bottomDecor2);
+        sceneElements.push(bottomDecor2);
+        
+        const bottomArch3 = createVerticalArch(-38);  // 从-28改为-38
+        scene.add(bottomArch3);
+        sceneElements.push(bottomArch3);
+        
+        const bottomText3 = createVerticalText('福满', -42);  // 从-32改为-42
+        scene.add(bottomText3);
+        sceneElements.push(bottomText3);
+        
+        // 前景梅花枝装饰（整体下移）
+        const plum1 = createPlumDecoration('left', 5);  // 从15改为5
         scene.add(plum1);
         sceneElements.push(plum1);
         
-        const plum2 = createPlumDecoration('right', 5);
+        const plum2 = createPlumDecoration('right', -5);  // 从5改为-5
         scene.add(plum2);
         sceneElements.push(plum2);
         
-        const plum3 = createPlumDecoration('left', -5);
+        const plum3 = createPlumDecoration('left', -15);  // 从-5改为-15
         scene.add(plum3);
         sceneElements.push(plum3);
         
-        const plum4 = createPlumDecoration('right', -12);
+        const plum4 = createPlumDecoration('right', -22);  // 从-12改为-22
         scene.add(plum4);
         sceneElements.push(plum4);
         
-        // 地面
+        // 底部梅花枝装饰
+        const plum5 = createPlumDecoration('left', -30);  // 从-20改为-30
+        scene.add(plum5);
+        sceneElements.push(plum5);
+        
+        const plum6 = createPlumDecoration('right', -36);  // 从-26改为-36
+        scene.add(plum6);
+        sceneElements.push(plum6)
+        
+        // 地面（扩大范围）
         const ground = createGround();
         scene.add(ground);
         
@@ -516,72 +546,123 @@
         
         window.addEventListener('scroll', handleScroll, { passive: true });
         
-        // 自动滚动（如果没有用户交互）
+        // 自动上下滑动（10秒无交互后）
         let autoScrollTimer = null;
+        let inactivityTimer = null;
         let userInteracted = false;
+        let autoScrollDirection = 1;
+        
+        const resetInactivityTimer = () => {
+            clearTimeout(inactivityTimer);
+            if (!userInteracted) {
+                inactivityTimer = setTimeout(() => {
+                    startAutoScroll();
+                }, 10000);
+            }
+        };
         
         const startAutoScroll = () => {
+            if (autoScrollTimer) return;
+            
             autoScrollTimer = setInterval(() => {
                 if (!userInteracted && !isScrolling) {
-                    window.scrollBy(0, 1.5);
-                    if (window.scrollY >= document.body.scrollHeight - window.innerHeight - 10) {
-                        setTimeout(() => {
-                            window.scrollTo({ top: 0, behavior: 'smooth' });
-                        }, 1000);
+                    const currentScrollY = window.scrollY;
+                    const maxScroll = document.body.scrollHeight - window.innerHeight;
+                    
+                    // 检查是否到达顶部或底部，改变方向（留出更多边距）
+                    if (currentScrollY >= maxScroll - 20) {
+                        autoScrollDirection = -1;
+                    } else if (currentScrollY <= 20) {
+                        autoScrollDirection = 1;
                     }
+                    
+                    // 慢速上下滑动
+                    window.scrollBy(0, autoScrollDirection * 0.8);
                 }
-            }, 50);
+            }, 40);
+        };
+        
+        const stopAutoScroll = () => {
+            clearInterval(autoScrollTimer);
+            autoScrollTimer = null;
+            clearTimeout(inactivityTimer);
         };
         
         // 检测用户交互
         const detectUserInteraction = () => {
             userInteracted = true;
-            if (autoScrollTimer) {
-                clearInterval(autoScrollTimer);
-                autoScrollTimer = null;
-            }
+            stopAutoScroll();
         };
         
+        // 监听各种交互事件
         window.addEventListener('touchstart', detectUserInteraction, { passive: true });
         window.addEventListener('touchmove', detectUserInteraction, { passive: true });
+        window.addEventListener('touchend', detectUserInteraction, { passive: true });
         window.addEventListener('wheel', detectUserInteraction, { passive: true });
         window.addEventListener('mousedown', detectUserInteraction, { passive: true });
+        window.addEventListener('keydown', detectUserInteraction, { passive: true });
+        
+        // 监听滚动变化，重置无交互计时器
+        let scrollTimeout;
+        window.addEventListener('scroll', () => {
+            clearTimeout(scrollTimeout);
+            scrollTimeout = setTimeout(() => {
+                if (!userInteracted) {
+                    resetInactivityTimer();
+                }
+            }, 100);
+        }, { passive: true });
         
         // 渲染循环
         const animate = () => {
             requestAnimationFrame(animate);
-            time += 0.02;
+            time += 0.016; // 约60fps
             
             // 直接获取当前滚动位置，立即响应
             const currentScrollY = window.scrollY || window.pageYOffset;
             const maxScroll = document.body.scrollHeight - window.innerHeight;
             const scrollPercent = maxScroll > 0 ? currentScrollY / maxScroll : 0;
             
-            // 相机垂直位置（直接映射滚动位置）
-            camera.position.y = scrollPercent * 40;
+            // 修复：相机向下移动（与手指滑动方向一致）
+            // 整体下移，确保新春显示完整：从顶部8（第一屏）向下移动到底部-45
+            camera.position.y = 8 - scrollPercent * 53;
             
-            // 相机轻微摆动和呼吸效果
-            const breathEffect = Math.sin(time * 0.3) * 0.5;
-            camera.position.x = Math.sin(time * 0.2) * 0.6;
+            // 增强的相机动画效果
+            const breathEffect = Math.sin(time * 0.25) * 0.6;
+            const swayEffect = Math.sin(time * 0.15) * 0.4;
+            camera.position.x = swayEffect;
             camera.position.z = 25 + breathEffect;
             
-            // 相机始终看向场景中心
-            const lookY = camera.position.y + breathEffect * 0.2;
-            camera.lookAt(camera.position.x, lookY, 0);
+            // 相机始终看向场景中心，添加微妙的上下偏移
+            const lookOffset = Math.sin(time * 0.1) * 0.3;
+            camera.lookAt(swayEffect * 0.5, camera.position.y + lookOffset, 0);
             
-            // 场景元素动画
+            // 场景元素动画 - 更流畅的摆动和呼吸效果
             sceneElements.forEach((element, index) => {
                 if (element.rotation) {
-                    element.rotation.y = Math.sin(time * 0.5 + index * 0.5) * 0.04;
+                    // 每个元素有不同的摆动频率和幅度
+                    const rotationSpeed = 0.3 + (index % 3) * 0.2;
+                    const rotationAmount = 0.02 + (index % 5) * 0.01;
+                    element.rotation.y = Math.sin(time * rotationSpeed + index) * rotationAmount;
+                    element.rotation.x = Math.cos(time * rotationSpeed * 0.7 + index) * rotationAmount * 0.5;
                 }
                 
                 // 前景梅花枝的呼吸效果
                 if (element.children && index >= 8) {
                     element.children.forEach((child, childIndex) => {
                         if (child.material && child.material.opacity !== undefined) {
-                            child.material.opacity = 0.6 + Math.sin(time * 1.5 + index + childIndex) * 0.3;
+                            const opacityPhase = time * 1.2 + index * 0.3 + childIndex * 0.2;
+                            child.material.opacity = 0.5 + Math.sin(opacityPhase) * 0.3;
                         }
                     });
+                }
+                
+                // 亭台楼阁的微妙缩放效果
+                if (element.children && index >= 3 && index <= 5) {
+                    const scalePhase = time * 0.4 + index * 0.5;
+                    const baseScale = element.userData?.baseScale || 1;
+                    const scale = baseScale * (1 + Math.sin(scalePhase) * 0.02);
+                    element.scale.set(scale, scale, scale);
                 }
             });
             
@@ -595,10 +676,8 @@
             renderer.setSize(window.innerWidth, window.innerHeight);
         });
         
-        // 5秒后开始自动滚动
-        setTimeout(() => {
-            startAutoScroll();
-        }, 4000);
+        // 启动无交互检测（10秒后自动上下滑动）
+        resetInactivityTimer();
         
         animate();
     </script>
