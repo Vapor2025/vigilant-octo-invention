@@ -10,19 +10,27 @@
             padding: 0;
             box-sizing: border-box;
         }
-        body {
+        html {
             overflow-x: hidden;
             overflow-y: auto;
+            height: 100%;
+        }
+        body {
+            margin: 0;
+            padding: 0;
             background: #c8102e;
             font-family: 'KaiTi', 'STKaiti', '楷体', serif;
-            height: 100vh;
-            position: relative;
+            min-height: 100%;
+            overflow-x: hidden;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
         }
         #canvas-container {
             width: 100vw;
             height: 400vh;
             position: relative;
-            overflow: hidden;
+            overflow: visible;
+            touch-action: pan-y;
         }
         .loading {
             position: fixed;
@@ -90,6 +98,11 @@
         renderer.shadowMap.type = THREE.PCFSoftShadowMap;
         renderer.toneMapping = THREE.ACESFilmicToneMapping;
         renderer.toneMappingExposure = 1.2;
+        renderer.domElement.style.position = 'fixed';
+        renderer.domElement.style.top = '0';
+        renderer.domElement.style.left = '0';
+        renderer.domElement.style.pointerEvents = 'none';
+        renderer.domElement.style.zIndex = '1';
         document.getElementById('canvas-container').appendChild(renderer.domElement);
         
         // 隐藏加载提示
@@ -430,15 +443,12 @@
         scene.add(ground);
         
         // 滚动动画变量
-        let scrollY = 0;
-        let targetScrollY = 0;
         let isScrolling = false;
         let time = 0;
         
-        // 处理滚动
+        // 处理滚动 - 更新标题显示
         const handleScroll = () => {
             const scrollPercent = window.scrollY / (document.body.scrollHeight - window.innerHeight);
-            targetScrollY = scrollPercent * 35; // 相机移动范围从0到35
             
             // 显示对应的标题
             const titles = ['title1', 'title2', 'title3', 'title4'];
@@ -447,12 +457,7 @@
             titles.forEach((id, i) => {
                 const title = document.getElementById(id);
                 const titlePos = titlePositions[i];
-                
-                if (Math.abs(scrollPercent - titlePos) < 0.08) {
-                    title.style.opacity = '1';
-                } else {
-                    title.style.opacity = '0';
-                }
+                title.style.opacity = Math.abs(scrollPercent - titlePos) < 0.08 ? '1' : '0';
             });
             
             // 隐藏滚动指示器
@@ -461,79 +466,91 @@
             }
         };
         
-        // 鼠标滚轮和触摸滚动
-        let touchStartY = 0;
-        
+        // 优化触摸和滚轮滚动 - 使用浏览器原生滚动
         window.addEventListener('wheel', (e) => {
-            e.preventDefault();
             isScrolling = true;
-            setTimeout(() => { isScrolling = false; }, 100);
-        }, { passive: false });
-        
-        window.addEventListener('touchstart', (e) => {
-            touchStartY = e.touches[0].clientY;
+            clearTimeout(window.scrollTimeout);
+            window.scrollTimeout = setTimeout(() => { 
+                isScrolling = false; 
+            }, 150);
         }, { passive: true });
         
-        window.addEventListener('touchmove', (e) => {
-            e.preventDefault();
+        window.addEventListener('touchstart', (e) => {
             isScrolling = true;
-            setTimeout(() => { isScrolling = false; }, 100);
-        }, { passive: false });
+        }, { passive: true });
         
-        window.addEventListener('scroll', handleScroll);
+        window.addEventListener('touchend', (e) => {
+            setTimeout(() => { 
+                isScrolling = false; 
+            }, 150);
+        }, { passive: true });
+        
+        window.addEventListener('scroll', handleScroll, { passive: true });
         
         // 自动滚动（如果没有用户交互）
         let autoScrollTimer = null;
+        let userInteracted = false;
+        
         const startAutoScroll = () => {
             autoScrollTimer = setInterval(() => {
-                if (!isScrolling) {
-                    window.scrollBy(0, 1);
-                    if (window.scrollY >= document.body.scrollHeight - window.innerHeight) {
-                        window.scrollTo(0, 0);
+                if (!userInteracted && !isScrolling) {
+                    window.scrollBy(0, 1.5);
+                    if (window.scrollY >= document.body.scrollHeight - window.innerHeight - 10) {
+                        setTimeout(() => {
+                            window.scrollTo({ top: 0, behavior: 'smooth' });
+                        }, 1000);
                     }
                 }
-            }, 40);
+            }, 50);
         };
         
-        // 用户交互后停止自动滚动
-        window.addEventListener('touchstart', () => {
+        // 检测用户交互
+        const detectUserInteraction = () => {
+            userInteracted = true;
             if (autoScrollTimer) {
                 clearInterval(autoScrollTimer);
                 autoScrollTimer = null;
             }
-        }, { passive: true });
+        };
         
-        window.addEventListener('wheel', () => {
-            if (autoScrollTimer) {
-                clearInterval(autoScrollTimer);
-                autoScrollTimer = null;
-            }
-        }, { passive: true });
+        window.addEventListener('touchstart', detectUserInteraction, { passive: true });
+        window.addEventListener('touchmove', detectUserInteraction, { passive: true });
+        window.addEventListener('wheel', detectUserInteraction, { passive: true });
+        window.addEventListener('mousedown', detectUserInteraction, { passive: true });
         
         // 渲染循环
         const animate = () => {
             requestAnimationFrame(animate);
             time += 0.02;
             
-            // 平滑滚动
-            scrollY += (targetScrollY - scrollY) * 0.12;
-            camera.position.y = scrollY;
+            // 直接获取当前滚动位置，立即响应
+            const currentScrollY = window.scrollY || window.pageYOffset;
+            const maxScroll = document.body.scrollHeight - window.innerHeight;
+            const scrollPercent = maxScroll > 0 ? currentScrollY / maxScroll : 0;
             
-            // 相机轻微摆动
-            camera.position.x = Math.sin(time * 0.2) * 0.8;
-            camera.lookAt(camera.position.x, scrollY, 0);
+            // 相机垂直位置（直接映射滚动位置）
+            camera.position.y = scrollPercent * 40;
+            
+            // 相机轻微摆动和呼吸效果
+            const breathEffect = Math.sin(time * 0.3) * 0.5;
+            camera.position.x = Math.sin(time * 0.2) * 0.6;
+            camera.position.z = 25 + breathEffect;
+            
+            // 相机始终看向场景中心
+            const lookY = camera.position.y + breathEffect * 0.2;
+            camera.lookAt(camera.position.x, lookY, 0);
             
             // 场景元素动画
             sceneElements.forEach((element, index) => {
                 if (element.rotation) {
-                    element.rotation.y = Math.sin(time + index) * 0.03;
+                    element.rotation.y = Math.sin(time * 0.5 + index * 0.5) * 0.04;
                 }
                 
-                // 前景元素透明度变化
-                if (element.children && (index === 8 || index === 9 || index === 10 || index === 11)) {
-                    element.children.forEach(child => {
+                // 前景梅花枝的呼吸效果
+                if (element.children && index >= 8) {
+                    element.children.forEach((child, childIndex) => {
                         if (child.material && child.material.opacity !== undefined) {
-                            child.material.opacity = 0.5 + Math.sin(time * 2 + index) * 0.3;
+                            child.material.opacity = 0.6 + Math.sin(time * 1.5 + index + childIndex) * 0.3;
                         }
                     });
                 }
